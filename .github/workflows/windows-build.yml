@@ -20,17 +20,38 @@ jobs:
           rustc -vV
           cargo -vV
 
-      # ✅ FIX: configure cargo BEFORE build
-      - name: Configure cargo
+      # ✅ Fix Git dependency issues (VERY IMPORTANT)
+      - name: Configure cargo for git deps
         run: |
           mkdir $env:USERPROFILE\.cargo -Force
           echo "[net]" >> $env:USERPROFILE\.cargo\config.toml
           echo "git-fetch-with-cli = true" >> $env:USERPROFILE\.cargo\config.toml
+          echo "[http]" >> $env:USERPROFILE\.cargo\config.toml
+          echo "multiplexing = false" >> $env:USERPROFILE\.cargo\config.toml
 
+      # ✅ Cache (faster builds)
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~\.cargo\registry
+            ~\.cargo\git
+            gram\target
+          key: windows-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      # ✅ Clone external project (your case)
       - name: Clone Gram repo
         run: git clone --depth=1 https://codeberg.org/GramEditor/gram
 
+      # ✅ Build
       - name: Build (Release)
         run: |
           cd gram
           cargo build --release
+
+      # ✅ Upload .exe (artifact)
+      - name: Upload binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: gram-windows
+          path: gram/target/release/
