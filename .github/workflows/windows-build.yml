@@ -1,0 +1,29 @@
+name: Windows Rust Build
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: windows-2022  # same as Visual Studio 2022
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Verify Rust
+        run: |
+          rustc -vV
+          cargo -vV
+
+      - name: Clone Gram repo
+        run: git clone --depth=1 https://codeberg.org/GramEditor/gram
+
+      - name: Build (Release)
+        run: |
+          cd gram
+          cargo build --release
