@@ -9,6 +9,14 @@ jobs:
     runs-on: windows-2022
 
     steps:
+      - name: Enable long paths (Windows fix)
+        run: git config --system core.longpaths true
+
+      - name: Shorten cargo paths
+        run: |
+          echo "CARGO_HOME=C:\.cargo" >> $env:GITHUB_ENV
+          echo "CARGO_TARGET_DIR=C:\target" >> $env:GITHUB_ENV
+
       - name: Checkout repo
         uses: actions/checkout@v4
 
@@ -20,38 +28,33 @@ jobs:
           rustc -vV
           cargo -vV
 
-      # ✅ Fix Git dependency issues (VERY IMPORTANT)
-      - name: Configure cargo for git deps
+      - name: Configure cargo (git fix)
         run: |
-          mkdir $env:USERPROFILE\.cargo -Force
-          echo "[net]" >> $env:USERPROFILE\.cargo\config.toml
-          echo "git-fetch-with-cli = true" >> $env:USERPROFILE\.cargo\config.toml
-          echo "[http]" >> $env:USERPROFILE\.cargo\config.toml
-          echo "multiplexing = false" >> $env:USERPROFILE\.cargo\config.toml
+          mkdir C:\.cargo -Force
+          echo "[net]" >> C:\.cargo\config.toml
+          echo "git-fetch-with-cli = true" >> C:\.cargo\config.toml
+          echo "[http]" >> C:\.cargo\config.toml
+          echo "multiplexing = false" >> C:\.cargo\config.toml
 
-      # ✅ Cache (faster builds)
       - name: Cache cargo
         uses: actions/cache@v4
         with:
           path: |
-            ~\.cargo\registry
-            ~\.cargo\git
-            gram\target
+            C:\.cargo\registry
+            C:\.cargo\git
+            C:\target
           key: windows-cargo-${{ hashFiles('**/Cargo.lock') }}
 
-      # ✅ Clone external project (your case)
       - name: Clone Gram repo
         run: git clone --depth=1 https://codeberg.org/GramEditor/gram
 
-      # ✅ Build
       - name: Build (Release)
         run: |
           cd gram
-          cargo build --release
+          cargo build --release --bins
 
-      # ✅ Upload .exe (artifact)
       - name: Upload binary
         uses: actions/upload-artifact@v4
         with:
           name: gram-windows
-          path: gram/target/release/
+          path: C:\target\release\
