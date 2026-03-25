@@ -6,7 +6,7 @@ on:
 
 jobs:
   build:
-    runs-on: windows-2022  # same as Visual Studio 2022
+    runs-on: windows-2022
 
     steps:
       - name: Checkout repo
@@ -19,6 +19,13 @@ jobs:
         run: |
           rustc -vV
           cargo -vV
+
+      # ✅ FIX: configure cargo BEFORE build
+      - name: Configure cargo
+        run: |
+          mkdir $env:USERPROFILE\.cargo -Force
+          echo "[net]" >> $env:USERPROFILE\.cargo\config.toml
+          echo "git-fetch-with-cli = true" >> $env:USERPROFILE\.cargo\config.toml
 
       - name: Clone Gram repo
         run: git clone --depth=1 https://codeberg.org/GramEditor/gram
